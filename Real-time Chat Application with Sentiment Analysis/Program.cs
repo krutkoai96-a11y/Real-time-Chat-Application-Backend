@@ -15,6 +15,14 @@ var builder = WebApplication.CreateBuilder(args);
 var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
 
 builder.Services.AddSignalR().AddAzureSignalR();
+
+/*builder.WebHost.ConfigureKestrel(options =>
+{
+    var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+    Console.WriteLine($"Listening on port: {port}");
+    options.ListenAnyIP(int.Parse(port));
+});*/
+
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 
 // JWT
@@ -54,36 +62,9 @@ builder.Services.AddAuthentication("Bearer")
 
 // Services
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "Введите JWT токен: Bearer {your token}"
-    });
-
-    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-    {
-        {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-            {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
-});
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddControllers();
-//builder.Services.AddSignalR();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
@@ -113,6 +94,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.UseRouting();
 
 app.UseCors();
 
